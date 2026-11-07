@@ -115,9 +115,27 @@ bool CFbDll::LoadDll (const char * client, const char * clientDef)
 	__ENTRYPOINT_OOAPI(get_transaction_handle);
 	__ENTRYPOINT_OOAPI(get_database_handle);
 
+	// Dynamic symbols are optional at the loader level, not at the OOAPI level.
+	// Fail closed and release the library before dereferencing a missing symbol.
+	if (!_get_master_interface) {
+		Release();
+		return false;
+	}
 	_master = _get_master_interface();
-	_prov   = _master->getDispatcher();
+	if (!_master) {
+		Release();
+		return false;
+	}
 	_status = _master->getStatus();
+	if (!_status) {
+		Release();
+		return false;
+	}
+	_prov = _master->getDispatcher();
+	if (!_prov) {
+		Release();
+		return false;
+	}
 
 	return true;
 }
