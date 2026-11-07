@@ -154,6 +154,9 @@ static SQLRETURN __SQLAllocHandle( SQLSMALLINT handleType, SQLHANDLE inputHandle
 		return SQL_SUCCESS;
 	}
 
+	if (inputHandle == SQL_NULL_HANDLE)
+		return SQL_INVALID_HANDLE;
+
 	OdbcObject *object = (OdbcObject*)inputHandle;
 
 	if ( outputHandle == NULL )
@@ -210,6 +213,9 @@ SQLRETURN SQL_API SQLBindCol( SQLHSTMT hStmt, SQLUSMALLINT columnNumber,
 SQLRETURN SQL_API SQLCancel( SQLHSTMT hStmt )
 {
 	TRACE ("SQLCancel");
+
+	if (hStmt == SQL_NULL_HSTMT)
+		return SQL_INVALID_HANDLE;
 
 	return ((OdbcStatement*) hStmt)->sqlCancel();
 }
