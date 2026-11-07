@@ -65,11 +65,11 @@ void trace (const char *msg);
 #else
 
 #define GUARD
-#define GUARD_ENV(arg)
-#define GUARD_HSTMT(arg)
-#define GUARD_HDBC(arg)
-#define GUARD_HDESC(arg)	RAF_ODBC_NULL_CHECK(arg)
-#define GUARD_HTYPE(arg1,arg2)
+#define GUARD_ENV(arg)           RAF_ODBC_NULL_CHECK(arg)
+#define GUARD_HSTMT(arg)         RAF_ODBC_NULL_CHECK(arg)
+#define GUARD_HDBC(arg)          RAF_ODBC_NULL_CHECK(arg)
+#define GUARD_HDESC(arg)         RAF_ODBC_NULL_CHECK(arg)
+#define GUARD_HTYPE(arg1,arg2)   RAF_ODBC_NULL_CHECK(arg1)
 
 #endif
 
