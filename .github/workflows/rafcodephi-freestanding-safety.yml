@@ -1,0 +1,77 @@
+name: RAFCODEPHI Freestanding and Null Guard (scoped)
+on:
+  push:
+    paths:
+      - 'rafcodephi/freestanding/**'
+      - 'Main.h'
+      - 'Main.cpp'
+      - 'IscDbc/LoadFbClientDll.cpp'
+      - '.github/workflows/rafcodephi-freestanding-safety.yml'
+  pull_request:
+    paths:
+      - 'rafcodephi/freestanding/**'
+      - 'Main.h'
+      - 'Main.cpp'
+      - 'IscDbc/LoadFbClientDll.cpp'
+      - '.github/workflows/rafcodephi-freestanding-safety.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  freestanding-host:
+    name: No imports + host regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+      - name: GCC and Clang - no headers, no undefined imports, C11 tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/raf-odbc-gate
+          for cc in gcc clang; do
+            for opt in O0 O2 Os; do
+              obj="/tmp/raf-odbc-gate/${cc}-${opt}.o"
+              exe="/tmp/raf-odbc-gate/test-${cc}-${opt}"
+              "${cc}" -std=c11 -${opt} -ffreestanding -fno-builtin \
+                -fno-stack-protector -nostdinc -Wall -Wextra -Werror -pedantic \
+                -c rafcodephi/freestanding/raf_span_v1.c -o "${obj}"
+              if [ -n "$(nm -u "${obj}")" ]; then
+                echo "FAIL: undefined imports for ${cc} ${opt}"
+                nm -u "${obj}"
+                exit 1
+              fi
+              "${cc}" -std=c11 -${opt} -Wall -Wextra -Werror -pedantic \
+                rafcodephi/freestanding/raf_span_v1.c \
+                rafcodephi/freestanding/test_raf_span_v1.c -o "${exe}"
+              "${exe}"
+              echo "PASS scoped: ${cc} ${opt}, freestanding object + host assertions"
+            done
+          done
+      - name: C++ inherited null guards - all three lock tiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          for cxx in g++ clang++; do
+            for tier in 1 2 3; do
+              "${cxx}" -std=c++17 -O2 -Wall -Wextra -Werror -pedantic \
+                -DDRIVER_LOCKED_LEVEL="${tier}" \
+                rafcodephi/freestanding/test_null_guards.cpp \
+                -o "/tmp/raf-odbc-gate/guards-${cxx}-${tier}"
+              "/tmp/raf-odbc-gate/guards-${cxx}-${tier}"
+              echo "PASS scoped: ${cxx}, guard tier ${tier}"
+            done
+          done
+      - name: Clang cross-compile freestanding ARMv7 and AArch64
+        shell: bash
+        run: |
+          set -euo pipefail
+          for target in armv7-linux-gnueabihf aarch64-linux-gnu; do
+            clang -target "${target}" -std=c11 -O2 -ffreestanding \
+              -fno-builtin -fno-stack-protector -nostdinc \
+              -Wall -Wextra -Werror -pedantic \
+              -c rafcodephi/freestanding/raf_span_v1.c \
+              -o "/tmp/raf-odbc-gate/${target}.o"
+            file "/tmp/raf-odbc-gate/${target}.o"
+            echo "PASS scoped: ${target} compile only (NOT device E2E)"
+          done

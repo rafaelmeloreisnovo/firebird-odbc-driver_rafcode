@@ -39,23 +39,25 @@ void trace (const char *msg);
 #endif
 #endif
 
+#define RAF_ODBC_NULL_CHECK(arg) do { if (!(arg)) return SQL_INVALID_HANDLE; } while (0)
+
 #if(DRIVER_LOCKED_LEVEL == DRIVER_LOCKED_LEVEL_ENV)
 
 #define GUARD					SafeDllThread wt
-#define GUARD_ENV(arg)			GUARD
-#define GUARD_HSTMT(arg)		GUARD
-#define GUARD_HDBC(arg)			GUARD
-#define GUARD_HDESC(arg)		GUARD
-#define GUARD_HTYPE(arg1,arg2)	GUARD
+#define GUARD_ENV(arg)			RAF_ODBC_NULL_CHECK(arg); GUARD
+#define GUARD_HSTMT(arg)		RAF_ODBC_NULL_CHECK(arg); GUARD
+#define GUARD_HDBC(arg)			RAF_ODBC_NULL_CHECK(arg); GUARD
+#define GUARD_HDESC(arg)		RAF_ODBC_NULL_CHECK(arg); GUARD
+#define GUARD_HTYPE(arg1,arg2)	RAF_ODBC_NULL_CHECK(arg1); GUARD
 
 #elif(DRIVER_LOCKED_LEVEL == DRIVER_LOCKED_LEVEL_CONNECT)
 
 #define GUARD					SafeDllThread wt
-#define GUARD_ENV(arg)			SafeEnvThread wt((OdbcEnv*)arg)
-#define GUARD_HSTMT(arg)		SafeConnectThread wt(((OdbcStatement*)arg)->connection)
-#define GUARD_HDBC(arg) 		SafeConnectThread wt((OdbcConnection*)arg)
-#define GUARD_HDESC(arg)		SafeConnectThread wt(((OdbcDesc*)arg)->connection)
-#define GUARD_HTYPE(arg,arg1)	SafeConnectThread wt(												\
+#define GUARD_ENV(arg)			RAF_ODBC_NULL_CHECK(arg); SafeEnvThread wt((OdbcEnv*)arg)
+#define GUARD_HSTMT(arg)		RAF_ODBC_NULL_CHECK(arg); SafeConnectThread wt(((OdbcStatement*)arg)->connection)
+#define GUARD_HDBC(arg) 		RAF_ODBC_NULL_CHECK(arg); SafeConnectThread wt((OdbcConnection*)arg)
+#define GUARD_HDESC(arg)		RAF_ODBC_NULL_CHECK(arg); SafeConnectThread wt(((OdbcDesc*)arg)->connection)
+#define GUARD_HTYPE(arg,arg1)	RAF_ODBC_NULL_CHECK(arg); SafeConnectThread wt(												\
 									arg1==SQL_HANDLE_DBC ? (OdbcConnection*)arg:					\
 									arg1==SQL_HANDLE_STMT ? ((OdbcStatement*)arg)->connection:		\
 									arg1==SQL_HANDLE_DESC ? ((OdbcDesc*)arg)->connection : NULL )
@@ -63,11 +65,11 @@ void trace (const char *msg);
 #else
 
 #define GUARD
-#define GUARD_ENV(arg)
-#define GUARD_HSTMT(arg)
-#define GUARD_HDBC(arg)
-#define GUARD_HDESC(arg)	
-#define GUARD_HTYPE(arg1,arg2)
+#define GUARD_ENV(arg)           RAF_ODBC_NULL_CHECK(arg)
+#define GUARD_HSTMT(arg)         RAF_ODBC_NULL_CHECK(arg)
+#define GUARD_HDBC(arg)          RAF_ODBC_NULL_CHECK(arg)
+#define GUARD_HDESC(arg)         RAF_ODBC_NULL_CHECK(arg)
+#define GUARD_HTYPE(arg1,arg2)   RAF_ODBC_NULL_CHECK(arg1)
 
 #endif
 
