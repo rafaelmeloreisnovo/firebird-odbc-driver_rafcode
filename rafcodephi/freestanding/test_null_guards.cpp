@@ -26,7 +26,7 @@ static int env_test(OdbcEnv *v) { GUARD_ENV(v); return 0; }
 static int dbc_test(OdbcConnection *v) { GUARD_HDBC(v); return 0; }
 static int stmt_test(OdbcStatement *v) { GUARD_HSTMT(v); return 0; }
 static int desc_test(OdbcDesc *v) { GUARD_HDESC(v); return 0; }
-static int type_test(void *v, int t) { GUARD_HTYPE(v,t); return 0; }
+static int type_test(void *v, int t) { (void)t; GUARD_HTYPE(v,t); return 0; }
 int main()
 {
     OdbcEnv e;
